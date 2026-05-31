@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>课堂消消乐 | 特效+音效 | 5分钟挑战</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(145deg, #f9e7b3 0%, #f5c9a0 100%);
+            font-family: 'Comic Neue', 'Chalkboard SE', 'Comic Sans MS', cursive, system-ui;
+            padding: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: pan-y;
+        }
+
+        .game-container {
+            max-width: 1300px;
+            width: 100%;
+            background: rgba(255, 251, 220, 0.92);
+            border-radius: 60px 60px 50px 50px;
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2);
+            padding: 18px 16px 28px;
+        }
+
+        .game-header {
+            background: #ffdd99;
+            border-radius: 55px;
+            padding: 12px 18px;
+            margin-bottom: 22px;
+            box-shadow: 0 7px 0 #ccaa77;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #2d1b0c;
+            text-shadow: 3px 3px 0 #ffb347;
+            background: #fff0bb;
+            padding: 0 14px;
+            border-radius: 50px;
+            line-height: 1.3;
+        }
+
+        .timer-area {
+            background: #fdf8e7;
+            border-radius: 50px;
+            padding: 5px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            box-shadow: 0 4px 0 #d4b37a;
+        }
+
+        .timer-display {
+            background: #2b2b2b;
+            border-radius: 45px;
+            padding: 5px 14px;
+            font-family: monospace;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #f7f34b;
+            text-shadow: 0 0 4px #ff7b00;
+            letter-spacing: 2px;
+        }
+
+        .time-control {
+            display: flex;
+            gap: 8px;
+            background: #ffedc4;
+            padding: 4px 10px;
+            border-radius: 40px;
+        }
+
+        .time-unit {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: white;
+            padding: 3px 8px;
+            border-radius: 35px;
+        }
+
+        .time-unit label {
+            font-weight: bold;
+            color: #b45f1b;
+            font-size: 0.9rem;
+        }
+
+        .time-unit input {
+            width: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-align: center;
+            border: none;
+            background: #fff3e0;
+            border-radius: 30px;
+            padding: 4px 0;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .bubbles-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px 18px;
+            margin: 25px 0 20px;
+            min-height: 340px;
+            padding: 15px 6px;
+            background: rgba(245, 222, 179, 0.35);
+            border-radius: 55px;
+        }
+
+        .bubble {
+            background: radial-gradient(circle at 30% 25%, #fff6d0, #ffcc88);
+            padding: 14px 20px;
+            border-radius: 100px;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #2f1d0c;
+            text-align: center;
+            cursor: pointer;
+            touch-action: manipulation;
+            box-shadow: 0 8px 0 rgba(0, 0, 0, 0.12), 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.05s linear, box-shadow 0.05s linear, background 0.1s ease;
+            border: 2px solid #fff6cf;
+            min-width: 90px;
+            white-space: nowrap;
+        }
+
+        .bubble:active {
+            transform: scale(0.96);
+        }
+
+        .bubble.highlight {
+            filter: brightness(1.08);
+            box-shadow: 0 0 0 4px #fff3a3, 0 0 0 8px #ffbb77, 0 8px 0 rgba(0, 0, 0, 0.12);
+            transform: scale(1.02);
+        }
+
+        .bubble.error-flash {
+            background: #ff6b6b !important;
+            filter: brightness(1);
+            transition: background 0.05s;
+        }
+
+        .bubble.success-flash {
+            background: #6bcf7f !important;
+            filter: brightness(1);
+            transition: background 0.08s;
+        }
+
+        .bubble.eliminate-anim {
+            animation: popOff 0.2s ease forwards;
+        }
+
+        @keyframes popOff {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.2); opacity: 0; visibility: hidden; }
+        }
+
+        .footer {
+            display: flex;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .import-btn {
+            background: #ffae70;
+            border: none;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 10px 32px;
+            border-radius: 80px;
+            box-shadow: 0 6px 0 #8b5a2b;
+            transition: 0.05s linear;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            touch-action: manipulation;
+            cursor: pointer;
+            font-family: inherit;
+            color: #2d1f0c;
+        }
+
+        .import-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 3px 0 #8b5a2b;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #fff4e0;
+            border-radius: 55px;
+            width: 92%;
+            max-width: 520px;
+            padding: 22px 18px 32px;
+            text-align: center;
+            border: 5px solid #ffcd94;
+            animation: bounceIn 0.2s ease;
+        }
+
+        .modal-content h3 {
+            font-size: 1.7rem;
+            color: #552e0e;
+        }
+
+        .modal-content textarea {
+            width: 100%;
+            height: 260px;
+            font-size: 1rem;
+            font-family: monospace;
+            padding: 12px;
+            border-radius: 35px;
+            border: 3px solid #f7bc65;
+            background: #fffff2;
+            font-weight: bold;
+            resize: vertical;
+            outline: none;
+        }
+
+        .modal-buttons {
+            margin-top: 20px;
+            display: flex;
+            gap: 18px;
+            justify-content: center;
+        }
+
+        .modal-buttons button {
+            font-size: 1.25rem;
+            font-weight: bold;
+            padding: 8px 24px;
+            border-radius: 50px;
+            border: none;
+            background: #ffc285;
+            box-shadow: 0 4px 0 #a5651e;
+            transition: 0.05s linear;
+            cursor: pointer;
+        }
+
+        .toast-message {
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff9e8;
+            color: #5f3700;
+            font-size: 1.5rem;
+            font-weight: bold;
+            padding: 14px 28px;
+            border-radius: 60px;
+            box-shadow: 0 12px 20px black;
+            z-index: 1100;
+            border-left: 10px solid #ff9f4a;
+            border-right: 10px solid #ff9f4a;
+            white-space: nowrap;
+        }
+
+        .audio-hint {
+            position: absolute;
+            bottom: 15px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #a5651e;
+            background: #fff0bb;
+            width: fit-content;
+            margin: 0 auto;
+            padding: 4px 12px;
+            border-radius: 30px;
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        @keyframes bounceIn {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .game-inactive .bubble {
+            pointer-events: none;
+            opacity: 0.7;
+            filter: grayscale(0.05);
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 8px; }
+            .game-container { padding: 14px; }
+            .bubble {
+                font-size: 1.1rem;
+                padding: 10px 14px;
+                min-width: 70px;
+                white-space: normal;
+                word-break: keep-all;
+            }
+            h1 { font-size: 1.4rem; }
+            .timer-display { font-size: 1.4rem; }
+            .import-btn { font-size: 1.3rem; padding: 8px 22px; }
+            .toast-message { font-size: 1.2rem; white-space: normal; width: 80%; padding: 10px 18px; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container" id="gameApp">
+    <div class="game-header">
+        <h1>🎈 课堂消消乐 🔊</h1>
+        <div class="timer-area">
+            <div class="timer-display" id="timerDisplay">00:00</div>
+            <div class="time-control">
+                <div class="time-unit"><label>分</label><input type="number" id="minutesInput" min="0" max="99" value="5" step="1" inputmode="numeric"></div>
+                <div class="time-unit"><label>秒</label><input type="number" id="secondsInput" min="0" max="59" value="0" step="1" inputmode="numeric"></div>
+            </div>
+        </div>
+    </div>
+    <div id="bubbleGrid" class="bubbles-grid"></div>
+    <div class="footer"><button class="import-btn" id="importBtn">📥 导入词库 ✨</button></div>
+</div>
+<div class="audio-hint" id="audioHint">🔊 点击任意气泡开启音效</div>
+
+<div id="importModal" class="modal">
+    <div class="modal-content">
+        <h3>🧸 编辑单词配对</h3>
+        <p style="color:#9b5e2c; font-weight:bold;">每行一对，英文在前，中文在后，用英文逗号隔开</p>
+        <textarea id="pairTextarea" placeholder="例如：&#10;apple,苹果&#10;cat,猫"></textarea>
+        <div class="modal-buttons"><button id="confirmImport">✅ 开始挑战</button><button id="cancelImport">❌ 取消</button></div>
+    </div>
+</div>
+
+<script>
+    (function(){
+        // ---------- 增强音频模块 (确保在微信中可用) ----------
+        let audioCtx = null;
+        let audioEnabled = false;
+        let audioUnlockAttempts = 0;
+
+        function initAudio() {
+            if (audioCtx) return audioCtx;
+            try {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                // 挂起，等待用户手势
+                audioCtx.suspend();
+                return audioCtx;
+            } catch(e) {
+                console.warn("Web Audio not supported");
+                return null;
+            }
+        }
+
+        // 解锁音频上下文 (必须在用户触摸事件中调用)
+        function unlockAudio() {
+            if (!audioCtx) {
+                initAudio();
+            }
+            if (audioCtx && audioCtx.state !== 'running') {
+                audioCtx.resume().then(() => {
+                    audioEnabled = true;
+                    // 播放一个极短的提示音，表示音效已开启
+                    if (audioCtx.state === 'running') {
+                        try {
+                            const osc = audioCtx.createOscillator();
+                            const gain = audioCtx.createGain();
+                            osc.type = 'sine';
+                            osc.frequency.value = 880;
+                            gain.gain.value = 0.15;
+                            osc.connect(gain);
+                            gain.connect(audioCtx.destination);
+                            osc.start();
+                            gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
+                            osc.stop(audioCtx.currentTime + 0.2);
+                        } catch(e) {}
+                        const hint = document.getElementById('audioHint');
+                        if (hint) hint.style.opacity = '0';
+                    }
+                }).catch(e => console.log("audio resume failed", e));
+            } else if (audioCtx && audioCtx.state === 'running') {
+                audioEnabled = true;
+                const hint = document.getElementById('audioHint');
+                if (hint) hint.style.opacity = '0';
+            }
+        }
+
+        function ensureAudioAndPlay(playFunc) {
+            if (!audioCtx) initAudio();
+            if (audioCtx && audioCtx.state !== 'running') {
+                unlockAudio();
+                // 稍微延迟再播放，等待resume完成
+                setTimeout(() => {
+                    if (audioEnabled && audioCtx.state === 'running') {
+                        playFunc();
+                    } else {
+                        // 再次尝试
+                        if (audioCtx) audioCtx.resume().then(() => { audioEnabled=true; playFunc(); });
+                    }
+                }, 50);
+            } else if (audioEnabled && audioCtx && audioCtx.state === 'running') {
+                playFunc();
+            } else {
+                // 尝试解锁
+                unlockAudio();
+                setTimeout(() => {
+                    if (audioEnabled && audioCtx && audioCtx.state === 'running') playFunc();
+                }, 50);
+            }
+        }
+
+        function playErrorSound() {
+            ensureAudioAndPlay(() => {
+                if (!audioCtx || !audioEnabled) return;
+                try {
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.value = 880;
+                    gain.gain.value = 0.25;
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.25);
+                    osc.stop(now + 0.25);
+                } catch(e) {}
+            });
+        }
+
+        function playSuccessSound() {
+            ensureAudioAndPlay(() => {
+                if (!audioCtx || !audioEnabled) return;
+                try {
+                    const now = audioCtx.currentTime;
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = 523.25;
+                    gain.gain.value = 0.3;
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start();
+                    osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.18);
+                    gain.gain.exponentialRampToValueAtTime(0.00001, now + 0.25);
+                    osc.stop(now + 0.25);
+                } catch(e) {}
+            });
+        }
+
+        // 全局首次点击解锁音效 (绑定到游戏区域)
+        function globalUnlockHandler(e) {
+            unlockAudio();
+            // 解锁后移除监听，避免重复
+            document.removeEventListener('touchstart', globalUnlockHandler);
+            document.removeEventListener('click', globalUnlockHandler);
+        }
+        document.addEventListener('touchstart', globalUnlockHandler);
+        document.addEventListener('click', globalUnlockHandler);
+
+        // ---------- 游戏核心 ----------
+        let bubblesData = [];
+        let currentHighlightId = null;
+        let gameActive = true;
+        let timerInterval = null;
+        let remainingSeconds = 300;  // 5分钟
+        let isGameFinished = false;
+        let isProcessingEffect = false;
+
+        const bubbleGrid = document.getElementById('bubbleGrid');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const minutesInput = document.getElementById('minutesInput');
+        const secondsInput = document.getElementById('secondsInput');
+        const importBtn = document.getElementById('importBtn');
+        const importModal = document.getElementById('importModal');
+        const pairTextarea = document.getElementById('pairTextarea');
+        const confirmImportBtn = document.getElementById('confirmImport');
+        const cancelImportBtn = document.getElementById('cancelImport');
+
+        const colorPalette = [
+            'linear-gradient(135deg, #FFB7B2, #FF8A7A)', '#FFD966', '#A2E1B0', '#9AC0F5', '#F5C6A0', '#D9A7F0', '#FFB3BA', '#B0F2B4',
+            '#FDD0F2', '#C0E0FF', '#FFCC99', '#C5E99B', '#FFA07A', '#B5EAD7', '#FBC8B5', '#D4B8F0'
+        ];
+        function getRandomColor(idx) { return colorPalette[idx % colorPalette.length]; }
+
+        function showMessage(text) {
+            let old = document.querySelector('.toast-message');
+            if(old) old.remove();
+            let toast = document.createElement('div');
+            toast.className = 'toast-message';
+            toast.innerText = text;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+        }
+
+        function stopTimer() { if(timerInterval) clearInterval(timerInterval); timerInterval = null; }
+        function updateTimerDisplay() {
+            let mins = Math.floor(remainingSeconds / 60);
+            let secs = remainingSeconds % 60;
+            timerDisplay.textContent = `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+        }
+
+        function startTimer() {
+            if(timerInterval) stopTimer();
+            if(!gameActive) return;
+            if(remainingSeconds <= 0) { handleTimeOut(); return; }
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                if(!gameActive) return;
+                if(remainingSeconds <= 1) {
+                    remainingSeconds = 0;
+                    updateTimerDisplay();
+                    handleTimeOut();
+                    stopTimer();
+                } else {
+                    remainingSeconds--;
+                    updateTimerDisplay();
+                }
+            }, 1000);
+        }
+
+        function handleTimeOut() {
+            if(!gameActive || isGameFinished) return;
+            let notEliminated = bubblesData.filter(b => !b.eliminated).length;
+            if(notEliminated === 0) return;
+            gameActive = false;
+            isGameFinished = true;
+            if(currentHighlightId !== null) clearHighlight();
+            document.getElementById('gameApp').classList.add('game-inactive');
+            showMessage("⏰ 挑战失败... 重新导入再试吧！");
+            stopTimer();
+        }
+
+        function checkVictory() {
+            let remaining = bubblesData.filter(b => !b.eliminated).length;
+            if(remaining === 0 && gameActive === true && isGameFinished === false) {
+                gameActive = false;
+                isGameFinished = true;
+                stopTimer();
+                document.getElementById('gameApp').classList.add('game-inactive');
+                showMessage("🎉✨ 挑战成功！ 太厉害了！ ✨🎉");
+                return true;
+            }
+            return false;
+        }
+
+        function flashRed(bubbleEl) {
+            if(!bubbleEl) return;
+            bubbleEl.classList.add('error-flash');
+            setTimeout(() => bubbleEl.classList.remove('error-flash'), 300);
+        }
+
+        function flashGreen(bubbleEl) {
+            if(!bubbleEl) return;
+            bubbleEl.classList.add('success-flash');
+            setTimeout(() => bubbleEl.classList.remove('success-flash'), 200);
+        }
+
+        function pairSuccessAndEliminate(bubbleA, bubbleB) {
+            if(isProcessingEffect) return false;
+            isProcessingEffect = true;
+            playSuccessSound();
+            if(bubbleA.element) flashGreen(bubbleA.element);
+            if(bubbleB.element) flashGreen(bubbleB.element);
+            setTimeout(() => {
+                eliminatePairDirect(bubbleA, bubbleB);
+                isProcessingEffect = false;
+            }, 150);
+            return true;
+        }
+
+        function eliminatePairDirect(bubbleA, bubbleB) {
+            if(bubbleA.eliminated || bubbleB.eliminated) return;
+            bubbleA.eliminated = true;
+            bubbleB.eliminated = true;
+            const elA = bubbleA.element;
+            const elB = bubbleB.element;
+            if(elA && elB) {
+                elA.classList.add('eliminate-anim');
+                elB.classList.add('eliminate-anim');
+                setTimeout(() => {
+                    if(elA && elA.parentNode) elA.style.display = 'none';
+                    if(elB && elB.parentNode) elB.style.display = 'none';
+                }, 180);
+            } else {
+                if(elA) elA.style.display = 'none';
+                if(elB) elB.style.display = 'none';
+            }
+            clearHighlight();
+            checkVictory();
+        }
+
+        function handleMismatch(highlightedBubble, clickedBubble) {
+            if(isProcessingEffect) return;
+            isProcessingEffect = true;
+            playErrorSound();
+            if(highlightedBubble && highlightedBubble.element) flashRed(highlightedBubble.element);
+            if(clickedBubble && clickedBubble.element) flashRed(clickedBubble.element);
+            clearHighlight();
+            setTimeout(() => {
+                isProcessingEffect = false;
+            }, 300);
+        }
+
+        function clearHighlight() {
+            if(currentHighlightId !== null) {
+                let prev = bubblesData.find(b => b.id === currentHighlightId);
+                if(prev && prev.element) prev.element.classList.remove('highlight');
+                currentHighlightId = null;
+            }
+        }
+
+        function onBubbleClick(clickedId) {
+            // 每次点击气泡也尝试解锁音效（确保绝对能开启）
+            if (!audioEnabled) unlockAudio();
+            if(!gameActive || isGameFinished) return;
+            if(isProcessingEffect) return;
+            let clicked = bubblesData.find(b => b.id === clickedId);
+            if(!clicked || clicked.eliminated) return;
+
+            if(currentHighlightId === null) {
+                clearHighlight();
+                currentHighlightId = clicked.id;
+                clicked.element.classList.add('highlight');
+                return;
+            }
+
+            let highlighted = bubblesData.find(b => b.id === currentHighlightId);
+            if(highlighted && highlighted.id === clicked.id) {
+                clearHighlight();
+                return;
+            }
+
+            if(highlighted && !highlighted.eliminated && !clicked.eliminated) {
+                if(highlighted.pairId === clicked.pairId) {
+                    pairSuccessAndEliminate(highlighted, clicked);
+                } else {
+                    handleMismatch(highlighted, clicked);
+                }
+            } else {
+                clearHighlight();
+                currentHighlightId = clicked.id;
+                clicked.element.classList.add('highlight');
+            }
+        }
+
+        function renderBubbles() {
+            bubbleGrid.innerHTML = '';
+            bubblesData.forEach(bubble => {
+                if(bubble.eliminated) return;
+                let div = document.createElement('div');
+                div.className = 'bubble';
+                div.textContent = bubble.text;
+                div.style.background = bubble.bgColor || getRandomColor(bubble.pairId * 3 + bubble.id);
+                div.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    onBubbleClick(bubble.id);
+                });
+                bubble.element = div;
+                bubbleGrid.appendChild(div);
+            });
+        }
+
+        function resetGameState() {
+            stopTimer();
+            clearHighlight();
+            gameActive = true;
+            isGameFinished = false;
+            isProcessingEffect = false;
+            document.getElementById('gameApp').classList.remove('game-inactive');
+            currentHighlightId = null;
+        }
+
+        function buildGameFromPairs(pairsArray) {
+            if(!pairsArray || pairsArray.length === 0) return false;
+            let newBubbles = [];
+            let globalId = 0;
+            pairsArray.forEach(pair => {
+                newBubbles.push({
+                    id: globalId++,
+                    pairId: pair.pairId,
+                    text: pair.left,
+                    eliminated: false,
+                    element: null,
+                    bgColor: getRandomColor(pair.pairId * 2)
+                });
+                newBubbles.push({
+                    id: globalId++,
+                    pairId: pair.pairId,
+                    text: pair.right,
+                    eliminated: false,
+                    element: null,
+                    bgColor: getRandomColor(pair.pairId * 2 + 1)
+                });
+            });
+            for(let i = newBubbles.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newBubbles[i], newBubbles[j]] = [newBubbles[j], newBubbles[i]];
+            }
+            bubblesData = newBubbles;
+            return true;
+        }
+
+        function parsePairsFromText(text) {
+            let lines = text.split(/\r?\n/);
+            let pairs = [];
+            let pid = 0;
+            for(let line of lines) {
+                line = line.trim();
+                if(line === "") continue;
+                let commaIdx = line.indexOf(',');
+                if(commaIdx === -1) continue;
+                let left = line.substring(0, commaIdx).trim();
+                let right = line.substring(commaIdx + 1).trim();
+                if(left === "" || right === "") continue;
+                pairs.push({ pairId: pid++, left, right });
+            }
+            return pairs;
+        }
+
+        function importGameFromText(importText) {
+            let pairs = parsePairsFromText(importText);
+            if(pairs.length === 0) {
+                showMessage("📭 没有有效配对，示例：apple,苹果");
+                return false;
+            }
+            resetGameState();
+            if(!buildGameFromPairs(pairs)) return false;
+            renderBubbles();
+            let mins = parseInt(minutesInput.value) || 0;
+            let secs = parseInt(secondsInput.value) || 0;
+            if(mins < 0) mins = 0;
+            if(secs < 0) secs = 0;
+            if(secs > 59) secs = 59;
+            remainingSeconds = mins * 60 + secs;
+            if(remainingSeconds <= 0) remainingSeconds = 30;
+            updateTimerDisplay();
+            gameActive = true;
+            isGameFinished = false;
+            document.getElementById('gameApp').classList.remove('game-inactive');
+            stopTimer();
+            startTimer();
+            return true;
+        }
+
+        function loadDefaultData() {
+            const defaultWords = `by,通过
+bus,公交车
+car,汽车
+train,火车
+plane,飞机
+farm,农场
+Chinese,中国的
+new,新的
+see,看望
+job,工作
+driver,司机
+farmer,农民
+worker,工人
+doctor,医生
+nurse,护士
+our,我们的
+pen,钢笔
+queen,女王`;
+            pairTextarea.value = defaultWords;
+            importGameFromText(defaultWords);
+        }
+
+        function openModal() { importModal.style.display = 'flex'; }
+        function closeModal() { importModal.style.display = 'none'; }
+        confirmImportBtn.addEventListener('click', () => {
+            let raw = pairTextarea.value;
+            if(!raw.trim()) { showMessage("📝 请输入单词配对～"); return; }
+            let success = importGameFromText(raw);
+            if(success) closeModal();
+            else showMessage("❌ 格式错误，请用英文逗号分隔，每行一对");
+        });
+        cancelImportBtn.addEventListener('click', closeModal);
+        importModal.addEventListener('click', (e) => { if(e.target === importModal) closeModal(); });
+        importBtn.addEventListener('click', openModal);
+
+        minutesInput.addEventListener('change', () => {
+            let v = parseInt(minutesInput.value);
+            if(isNaN(v)) minutesInput.value = 5;
+            else if(v < 0) minutesInput.value = 0;
+            else if(v > 99) minutesInput.value = 99;
+        });
+        secondsInput.addEventListener('change', () => {
+            let v = parseInt(secondsInput.value);
+            if(isNaN(v)) secondsInput.value = 0;
+            else if(v < 0) secondsInput.value = 0;
+            else if(v > 59) secondsInput.value = 59;
+        });
+
+        // 初始化音频上下文
+        initAudio();
+        // 启动游戏
+        loadDefaultData();
+    })();
+</script>
+</body>
+</html>
